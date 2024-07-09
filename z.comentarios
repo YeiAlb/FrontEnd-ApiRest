@@ -1,0 +1,191 @@
+@RestController
+public class PeliculaController {
+
+	PeliculaRepository repositorio;
+	
+	//Hay que inyectar en un constructor, que va a recibir los objetos inyectados.
+	public PeliculaController(PeliculaRepository repositorio) {
+		this.repositorio = repositorio;
+	}
+
+	//MÉTODO LISTAR TODAS LAS PELICULAS
+	@CrossOrigin("http://127.0.0.1:5500")
+	@GetMapping("/api/peliculas")
+	public List<Pelicula> obtenerPeliculas() {
+		return repositorio.findAll();
+	}
+	
+	//MÉTODO BUSCAR UNA PELICULA:
+	//A este método le pasamos el id como argumento con @PathVariable, tiene que devolver un optional, usamos el repositorio para devolver la pelicula
+	//Dirección a la que va a responder.
+	//Usamos el argumento id que pasamos con la anotación @PathVariable.
+	@GetMapping("/api/pelicula/{id}")
+	public ResponseEntity<Pelicula> obtenerPelicula(@PathVariable Long id) {
+		Optional<Pelicula> opt = repositorio.findById(id);
+		
+		if (opt.isEmpty()) {
+			//Es un buena práctica retornar un responseEntity. Está basado un badRequest tipo builder.
+			return ResponseEntity.badRequest().build();			
+		}
+		else {
+			return ResponseEntity.ok(opt.get());
+		}
+	}
+	
+	//MÉTODO GUARDAR: un dato desde el Front. Usamos el RequestBody.
+	@CrossOrigin("http://127.0.0.1:5500")
+	@PostMapping("/api/peliculas")
+	public ResponseEntity<Pelicula> guardarPelicula(@RequestBody Pelicula pelicula) {
+			//No queremos la id, si pasa a error, queremos general nosotros mismos.
+		if (pelicula.getId() != null) {
+			return ResponseEntity.badRequest().build();
+		}
+		repositorio.save(pelicula);
+		return ResponseEntity.ok(pelicula);
+	}
+	
+	//MÉTODO ACTUALIZAR O EDITAR
+	@CrossOrigin("http://127.0.0.1:5500")
+	@PutMapping("/api/peliculas")
+	public ResponseEntity<Pelicula> actualizarPelicula(@RequestBody Pelicula pelicula) {
+			//Este método es parecido, arriba verificamos, si el valor id no era nulo, ahora si es nulo, que de error
+		if (pelicula.getId() ==null || !repositorio.existsById(pelicula.getId())) {
+			return ResponseEntity.badRequest().build();
+		}
+		repositorio.save(pelicula);
+		return ResponseEntity.ok(pelicula);
+	}
+	
+	//MÉTODO ELIMINAR
+	@CrossOrigin("http://127.0.0.1:5500")
+	@DeleteMapping("/api/pelicula/{id}")
+	public ResponseEntity<Pelicula> borrarPelicula(@PathVariable Long id) {
+		//Este método es parecido, arriba verificamos si el valor id no era nulo, ahora si es nulo, error
+		if (id == null || !repositorio.existsById(id)) {
+			return ResponseEntity.badRequest().build();
+		}
+		repositorio.deleteById(id);
+		return ResponseEntity.noContent().build();
+	}
+	
+}
+
+
+
+window.onload = function(){
+    listarPeliculas();
+}
+
+/*
+1. Creamos la variable y adentro el fetch que tiene que estar dentro de un método asíncrono.
+2. el fetch dentro del métodod asíncrono
+3. Fijamos el endpoint.
+4. Method y headers.
+5. Creamos la constante para guardar las peliculas, que hay dentro peticion, que no viene en un formato asíncrono, hay que usar away y pasarlo a json.
+6. Al recorrer la tabla hacemos un acumulador.
+7. Capturar la tabla y meterla en el tbody de la tabla, con query selector. Se usa outer, porque está inyectando código HTML y no inner porque no está inyectando valores 
+*/
+
+// Listado de las Peliculas.
+let listarPeliculas = async ()=>{
+
+    const peticion = await fetch("http://localhost:8080/api/peliculas",
+    {
+        method: 'GET',
+        headers: {
+            "Accept": 'application/json',
+            "Content-Type": 'application/json'
+        }
+    });
+    const peliculas = await peticion.json();
+
+
+    let contenidoTabla = "";
+
+    for(let pelicula of peliculas){
+        //Se usa las comillas al revés para escribir varias lineas
+        let contenidoFila = `<tr>
+        <td>${pelicula.id}</td>
+        <td>${pelicula.titulo}</td>
+        <td>${pelicula.director}</td>
+        <td>${pelicula.genero}</td>
+        <td>
+        <i onClick="editarPelicula(${pelicula.id})" class="material-icons button edit">edit</i>
+        <i onClick="borrarPelicula(${pelicula.id})" class="material-icons button delete">delete</i>
+        </td>
+        </tr>
+        `
+        contenidoTabla += contenidoFila;
+    }
+
+    document.querySelector("#tabla tbody").outerHTML = contenidoTabla;
+}
+
+//Borrado de Películas
+let borrarPelicula = async (id) => {
+    const peticion = await fetch("http://localhost:8080/api/pelicula/" + id,
+    {
+        method: 'DELETE',
+        headers: {
+            "Accept": 'application/json',
+            "Content-Type": 'application/json'
+        }
+    });
+
+    listarPeliculas();
+}
+
+
+//Edición de Peliculas ya registradas
+let idEditar; // Declarar idEditar fuera de la función para ser accesible globalmente
+
+let editarPelicula = async (id) => {
+    mostrarFormulario();
+
+    idEditar = id; // Asignar el valor de idEditar
+
+    //Usamos el ENDPOINT que devuelve una única película.
+    const peticion = await fetch("http://localhost:8080/api/pelicula/" + id, {
+        method: 'GET',
+        headers: {
+            "Accept": 'application/json',
+            "Content-Type": 'application/json'
+        }
+    });
+
+    const pelicula = await peticion.json();
+
+    document.getElementById("titulo").value = pelicula.titulo;
+    document.getElementById("director").value = pelicula.director;
+    document.getElementById("genero").value = pelicula.genero;
+    
+    let btnModificar = document.getElementById("btnModificar");
+}
+
+btnModificar.addEventListener("click", evento => {
+    aplicarActualizacion(idEditar);
+});
+
+let aplicarActualizacion = async (id) => {
+    let campos = {};
+    campos.id = id;
+    campos.titulo = document.getElementById("titulo").value;
+    campos.director = document.getElementById("director").value;
+    campos.genero = document.getElementById("genero").value;
+
+    const peticion = await fetch("http://localhost:8080/api/peliculas",{
+        method: 'PUT',
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(campos)
+    });
+
+    listarPeliculas();
+}
+
+function mostrarFormulario() {
+    let formulario = document.getElementById("formulario");
+    formulario.style.visibility = "visible";
+}

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="tabla.css">
+    <link rel="stylesheet" href="formulario.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons"
+      rel="stylesheet">
+    <title>Tabla Peliculas</title>
+</head>
+<body>
+    <table id="tabla">
+        <thead>
+          <tr>
+            <th colspan="6">Peliculas</th>
+          </tr>
+          <tr>
+            <th>#</th>
+            <th>Título</th>
+            <th>Director/a</th>
+            <th>Género</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+        </tbody>
+      </table>
+      <div id="formulario">
+        <h1>Editar Película</h1>
+          <div class="formbold-main-wrapper">
+              <div class="formbold-form-wrapper">
+                <form>
+                    <div class="formbold-input-flex">
+                      <div>
+                          <input
+                          type="text"
+                          name="titulo"
+                          id="titulo"
+                          placeholder="Avatar"
+                          class="formbold-form-input"
+                          />
+                          <label for="titulo" class="formbold-form-label"> Título </label>
+                      </div>
+                      <div>
+                          <input
+                          type="text"
+                          name="director"
+                          id="director"
+                          placeholder="Steven Spielberg"
+                          class="formbold-form-input"
+                          />
+                          <label for="director" class="formbold-form-label"> Director/a </label>
+                      </div>
+                    </div>
+                    <div class="formbold-input-flex">
+                      <div>
+                          <input
+                          type="text"
+                          name="genero"
+                          id="genero"
+                          placeholder="Drama"
+                          class="formbold-form-input"
+                          />
+                          <label for="genero" class="formbold-form-label"> Género </label>
+                      </div>
+                    </div>
+            
+                    <button id="btnModificar" class="formbold-btn">
+                        Editar Pelicula
+                    </button>
+                </form>
+              </div>
+          </div>
+      </div>
+      
+      <script src="tabla.js"></script>
+</body>
+</html>
